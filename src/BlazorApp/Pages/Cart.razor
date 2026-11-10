@@ -1,0 +1,67 @@
+@page "/cart"
+@inject CartService CartService
+@inject NavigationManager Navigation
+@using BlazorApp.Services
+
+<PageTitle>Warenkorb</PageTitle>
+
+<h2>Ihr Warenkorb</h2>
+
+@if (!CartService.Items.Any())
+{
+    <div class="alert alert-warning mt-3">Ihr Warenkorb ist zurzeit leer.</div>
+    <a href="products" class="btn btn-primary mt-2">Zum Produktkatalog</a>
+}
+else
+{
+    <table class="table align-middle mt-3">
+        <thead>
+            <tr>
+                <th>Produkt</th>
+                <th>Preis</th>
+                <th>Anzahl</th>
+                <th>Gesamt</th>
+                <th>Aktion</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in CartService.Items)
+            {
+                <tr>
+                    <td>@item.Product.Name</td>
+                    <td>@item.Product.Price.ToString("C")</td>
+                    <td>@item.Quantity</td>
+                    <td>@((item.Product.Price * item.Quantity).ToString("C"))</td>
+                    <td>
+                        <button class="btn btn-danger btn-sm" @onclick="() => CartService.RemoveFromCart(item.Product.Id)">Entfernen</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="d-flex justify-content-between align-items-center mt-4">
+        <h4>Gesamtsumme: <span class="text-success fw-bold">@CartService.GetTotalPrice().ToString("C")</span></h4>
+        <div>
+            <button class="btn btn-outline-secondary me-2" @onclick="CartService.ClearCart">Warenkorb leeren</button>
+            <button class="btn btn-success" @onclick="ProceedToCheckout">Kasse / Checkout</button>
+        </div>
+    </div>
+}
+
+@code {
+    protected override void OnInitialized()
+    {
+        CartService.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        CartService.OnChange -= StateHasChanged;
+    }
+
+    private void ProceedToCheckout()
+    {
+        Navigation.NavigateTo("/checkout");
+    }
+}

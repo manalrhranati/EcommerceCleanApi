@@ -1,0 +1,88 @@
+@page "/product/{id:guid}"
+@inject HttpClient Http
+@inject CartService CartService
+@inject NavigationManager Navigation
+@using BlazorApp.Services
+@using Application.Products.Queries
+
+<PageTitle>Produktdetails</PageTitle>
+
+<div class="container mt-4">
+    <button class="btn btn-outline-secondary mb-3" @onclick="GoBack">← Zurück zum Katalog</button>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">
+            <strong>Fehler beim Laden:</strong> @errorMessage
+        </div>
+    }
+    else if (product == null)
+    {
+        <p><em>Produkt wird geladen...</em></p>
+    }
+    else
+    {
+        <div class="row">
+            <!-- Linke Spalte: Bild-Platzhalter -->
+            <div class="col-md-6">
+                <div class="bg-light border rounded d-flex align-items-center justify-content-center" style="height: 350px;">
+                    <span class="text-muted fs-4">Kein Bild verfügbar</span>
+                </div>
+            </div>
+
+            <!-- Rechte Spalte: Details & Kaufoption -->
+            <div class="col-md-6">
+                <h2>@product.Name</h2>
+                <h3 class="text-success fw-bold my-3">@product.Price.ToString("C")</h3>
+                
+                <p class="text-muted">
+                    Ausführliche Beschreibung für dieses Produkt. Hier können Sie weitere Produktdetails und Lagerbestände anzeigen.
+                </p>
+
+                <hr class="my-4">
+
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary btn-lg" @onclick="AddToCart">
+                        In den Warenkorb
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private ProductDto? product;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Testen Sie die URL im Browser oder sehen Sie hier den genauen Fehler
+            product = await Http.GetFromJsonAsync<ProductDto>($"api/products/{Id}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+            Console.WriteLine($"Fehler beim Laden des Produkts: {ex.Message}");
+        }
+    }
+
+    private void AddToCart()
+    {
+        if (product != null)
+        {
+            CartService.AddToCart(product);
+            Navigation.NavigateTo("/cart");
+        }
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/products");
+    }
+}

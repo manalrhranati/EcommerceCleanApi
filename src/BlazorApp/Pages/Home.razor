@@ -1,0 +1,95 @@
+﻿@page "/"
+@inject HttpClient Http
+@inject BlazorApp.Services.CartService CartService
+@using Application.Products.Queries
+
+<PageTitle>Home - E-Commerce Shop</PageTitle>
+
+<!-- Hero Banner -->
+<div class="p-5 mb-4 bg-primary text-white rounded-3 shadow-sm">
+    <div class="container-fluid py-3">
+        <h1 class="display-5 fw-bold">Willkommen in unserem Shop!</h1>
+        <p class="col-md-8 fs-4">Entdecken Sie unsere neuesten Produkte zu besten Preisen.</p>
+        <a class="btn btn-light btn-lg font-weight-bold text-primary" href="products">Zum Produktkatalog</a>
+    </div>
+</div>
+
+<!-- Such- und Filterbereich -->
+<div class="row mb-4 g-3 align-items-center bg-light p-3 rounded shadow-sm">
+    <div class="col-md-6">
+        <label for="searchBox" class="form-label fw-bold">Produkt suchen</label>
+        <input type="text" id="searchBox" class="form-control" placeholder="Nach Produktnamen suchen..." 
+               @bind="searchTerm" @bind:event="oninput" />
+    </div>
+    <div class="col-md-6">
+        <label for="maxPrice" class="form-label fw-bold">Maximaler Preis: @maxPrice.ToString("C")</label>
+        <input type="range" id="maxPrice" class="form-range" min="0" max="1000" step="10" 
+               @bind="maxPrice" @bind:event="oninput" />
+    </div>
+</div>
+
+<!-- Highlighted Products Section -->
+<h3 class="mb-3">Aktuelle Highlights</h3>
+
+@if (products == null)
+{
+    <div class="d-flex align-items-center py-4">
+        <div class="spinner-border text-primary me-2" role="status"></div>
+        <span>Produkte werden geladen...</span>
+    </div>
+}
+else if (!FilteredProducts.Any())
+{
+    <div class="alert alert-info">Keine passenden Produkte gefunden.</div>
+}
+else
+{
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        @foreach (var item in FilteredProducts.Take(6))
+        {
+            <div class="col">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body">
+                        <h5 class="card-title">@item.Name</h5>
+                        <p class="card-text text-muted">Hochwertiges Produkt aus unserem Sortiment.</p>
+                        <h4 class="text-success fw-bold">@item.Price.ToString("C")</h4>
+                    </div>
+                    <div class="card-footer bg-transparent border-0 pb-3">
+                        <button class="btn btn-outline-primary w-100" @onclick="() => CartService.AddToCart(item)">
+                            In den Warenkorb
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private List<ProductDto>? products;
+    private string searchTerm = string.Empty;
+    private decimal maxPrice = 1000m;
+
+    private IEnumerable<ProductDto> FilteredProducts => products == null ? Enumerable.Empty<ProductDto>() : 
+        products.Where(p => 
+            (string.IsNullOrWhiteSpace(searchTerm) || p.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) &&
+            p.Price <= maxPrice
+        );
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            products = await Http.GetFromJsonAsync<List<ProductDto>>("api/products");
+            if (products != null && products.Any())
+            {
+                maxPrice = products.Max(p => p.Price) > 0 ? products.Max(p => p.Price) : 1000m;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Fehler beim Laden der Produkte: {ex.Message}");
+            products = new List<ProductDto>();
+        }
+    }
+}

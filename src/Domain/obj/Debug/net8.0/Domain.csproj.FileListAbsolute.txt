@@ -1,0 +1,11 @@
+/Users/manal/EcommerceCleanApi/src/Domain/bin/Debug/net8.0/Domain.deps.json
+/Users/manal/EcommerceCleanApi/src/Domain/bin/Debug/net8.0/Domain.dll
+/Users/manal/EcommerceCleanApi/src/Domain/bin/Debug/net8.0/Domain.pdb
+/Users/manal/EcommerceCleanApi/src/Domain/obj/Debug/net8.0/Domain.GeneratedMSBuildEditorConfig.editorconfig
+/Users/manal/EcommerceCleanApi/src/Domain/obj/Debug/net8.0/Domain.AssemblyInfoInputs.cache
+/Users/manal/EcommerceCleanApi/src/Domain/obj/Debug/net8.0/Domain.AssemblyInfo.cs
+/Users/manal/EcommerceCleanApi/src/Domain/obj/Debug/net8.0/Domain.csproj.CoreCompileInputs.cache
+/Users/manal/EcommerceCleanApi/src/Domain/obj/Debug/net8.0/Domain.dll
+/Users/manal/EcommerceCleanApi/src/Domain/obj/Debug/net8.0/refint/Domain.dll
+/Users/manal/EcommerceCleanApi/src/Domain/obj/Debug/net8.0/Domain.pdb
+/Users/manal/EcommerceCleanApi/src/Domain/obj/Debug/net8.0/ref/Domain.dll

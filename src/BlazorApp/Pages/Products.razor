@@ -1,0 +1,106 @@
+@page "/products"
+@inject HttpClient Http
+@inject CartService CartService
+@using BlazorApp.Services
+@using Application.Products.Queries
+
+<PageTitle>Produktkatalog</PageTitle>
+
+<h2>Catalogue des Produits</h2>
+
+<div class="card p-3 mb-4 bg-light shadow-sm">
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label fw-bold">Suchen</label>
+            <input type="text" class="form-control" placeholder="Produktname eingeben..." @bind="searchTerm" @bind:event="oninput" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-bold">Max. Preis: @maxPrice.ToString("C")</label>
+            <input type="range" class="form-range" min="0" max="1000" step="5" @bind="maxPrice" @bind:event="oninput" />
+        </div>
+    </div>
+</div>
+
+@if (products == null)
+{
+    <p><em>Laden...</em></p>
+}
+else if (!FilteredProducts.Any())
+{
+    <div class="alert alert-info">Keine Produkte gefunden.</div>
+}
+else
+{
+    <div class="d-flex flex-wrap gap-3">
+      @foreach (var product in FilteredProducts)
+{
+    <div class="card p-3 shadow-sm" style="width: 18rem;">
+        <!-- Hier wird der Name jetzt klickbar gemacht -->
+        <h5 class="card-title">
+            <a href="@($"product/{product.Id}")" class="text-decoration-none text-primary">@product.Name</a>
+        </h5>
+        <p class="text-success fw-bold fs-5">@product.Price.ToString("C")</p>
+        
+        <div class="d-flex gap-2 mt-auto">
+            <button class="btn btn-primary btn-sm flex-grow-1" @onclick="() => CartService.AddToCart(product)">
+                In den Warenkorb
+            </button>
+            <button class="btn btn-outline-danger btn-sm" @onclick="() => DeleteProduct(product.Id)">
+                Löschen
+            </button>
+        </div>
+    </div>
+}
+    </div>
+}
+
+@code {
+    private List<Application.Products.Queries.ProductDto>? products;
+    private string searchTerm = string.Empty;
+    private decimal maxPrice = 1000m;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProducts();
+    }
+
+    private async Task LoadProducts()
+    {
+        try
+        {
+            products = await Http.GetFromJsonAsync<List<Application.Products.Queries.ProductDto>>("api/products");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Fehler beim Laden der Produkte: {ex.Message}");
+        }
+    }
+
+    private async Task DeleteProduct(Guid id)
+    {
+        try
+        {
+            var response = await Http.DeleteAsync($"api/products/{id}");
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadProducts();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Fehler beim Löschen: {ex.Message}");
+        }
+    }
+
+    private IEnumerable<Application.Products.Queries.ProductDto> FilteredProducts
+    {
+        get
+        {
+            if (products == null) return Enumerable.Empty<Application.Products.Queries.ProductDto>();
+
+            return products.Where(p =>
+                (string.IsNullOrWhiteSpace(searchTerm) || p.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) &&
+                p.Price <= maxPrice);
+        }
+    }
+}

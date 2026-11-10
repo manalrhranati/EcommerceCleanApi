@@ -1,0 +1,111 @@
+@page "/checkout"
+@inject CartService CartService
+@inject NavigationManager Navigation
+@using BlazorApp.Services
+
+<PageTitle>Kasse & Checkout</PageTitle>
+
+<div class="container mt-4">
+    <h2>Kasse / Checkout</h2>
+
+    @if (!CartService.Items.Any() && !orderCompleted)
+    {
+        <div class="alert alert-warning mt-3">Ihr Warenkorb ist leer. Es kann keine Bestellung aufgegeben werden.</div>
+        <a href="products" class="btn btn-primary mt-2">Zum Produktkatalog</a>
+    }
+    else if (orderCompleted)
+    {
+        <div class="alert alert-success mt-4 shadow-sm p-4">
+            <h4 class="alert-heading">Vielen Dank für Ihre Bestellung! 🎉</h4>
+            <p>Ihre Bestellung wurde erfolgreich aufgegeben und wird in Kürze bearbeitet.</p>
+            <hr>
+            <p class="mb-0">Eine Bestätigung wurde an Ihre E-Mail-Adresse gesendet.</p>
+            <a href="" class="btn btn-primary mt-3">Zurück zur Startseite</a>
+        </div>
+    }
+    else
+    {
+        <div class="row mt-4">
+            <!-- Linke Spalte: Formular für Lieferadresse & Zahlungsart -->
+            <div class="col-md-7">
+                <div class="card shadow-sm p-4 mb-4">
+                    <h4 class="mb-3">Lieferadresse</h4>
+                    <form @onsubmit="CompleteCheckout">
+                        <div class="mb-3">
+                            <label class="form-label">Vollständiger Name</label>
+                            <input type="text" class="form-control" @bind="orderModel.FullName" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Straße und Hausnummer</label>
+                            <input type="text" class="form-control" @bind="orderModel.Address" required />
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">PLZ</label>
+                                <input type="text" class="form-control" @bind="orderModel.ZipCode" required />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Stadt</label>
+                                <input type="text" class="form-control" @bind="orderModel.City" required />
+                            </div>
+                        </div>
+
+                        <h4 class="mb-3 mt-4">Zahlungsart</h4>
+                        <div class="mb-3">
+                            <select class="form-select" @bind="orderModel.PaymentMethod">
+                                <option value="PayPal">PayPal</option>
+                                <option value="Kreditkarte">Kreditkarte</option>
+                                <option value="Rechnung">Kauf auf Rechnung</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100 btn-lg mt-3">Zahlungspflichtig bestellen</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Rechte Spalte: Bestellübersicht -->
+            <div class="col-md-5">
+                <div class="card shadow-sm p-4 bg-light">
+                    <h4 class="mb-3">Ihre Bestellung</h4>
+                    <ul class="list-group mb-3">
+                        @foreach (var item in CartService.Items)
+                        {
+                            <li class="list-group-item d-flex justify-content-between lh-sm">
+                                <div>
+                                    <h6 class="my-0">@item.Product.Name</h6>
+                                    <small class="text-muted">Anzahl: @item.Quantity</small>
+                                </div>
+                                <span class="text-muted">@((item.Product.Price * item.Quantity).ToString("C"))</span>
+                            </li>
+                        }
+                        <li class="list-group-item d-flex justify-content-between bg-white">
+                            <span class="fw-bold">Gesamtsumme</span>
+                            <strong class="text-success">@CartService.GetTotalPrice().ToString("C")</strong>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private OrderModel orderModel = new();
+    private bool orderCompleted = false;
+
+    private void CompleteCheckout()
+    {
+        orderCompleted = true;
+        CartService.ClearCart();
+    }
+
+    public class OrderModel
+    {
+        public string FullName { get; set; } = string.Empty;
+        public string Address { get; set; } = string.Empty;
+        public string ZipCode { get; set; } = string.Empty;
+        public string City { get; set; } = string.Empty;
+        public string PaymentMethod { get; set; } = "PayPal";
+    }
+}
